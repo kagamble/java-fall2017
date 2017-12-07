@@ -1,0 +1,97 @@
+package pkgfinal;
+import java.awt.*;                      // paint graphics and images
+import java.awt.image.BufferedImage;    // buffer of image data
+import javax.swing.*;                   // GUI, Jframe, JPanel
+import java.util.Scanner;
+ 
+public class Final extends JPanel 
+{
+    private final int maxIter = 300;
+    //private final double zoom = 1;
+    private double cY, cX;
+    
+    
+    public Final() 
+    {
+        setPreferredSize(new Dimension(800, 600));
+        setBackground(Color.white);
+    }
+ 
+    void drawJuliaSet(Graphics2D g, double _zoom) 
+    {
+        int w = getWidth();
+        int h = getHeight();
+        double zoom = _zoom;
+       
+        // class Buffredimage, TYPE_INT_RGB in 8-bit packed into integer pixels
+        BufferedImage image = new BufferedImage(w, h,
+                BufferedImage.TYPE_INT_RGB);
+ 
+        cX = -0.7;
+        cY = 0.27015;
+        double moveX = 0, moveY = 0;
+        double zx, zy;
+ 
+        for (int x = 0; x < w; x++) 
+        {
+            for (int y = 0; y < h; y++) 
+            {
+                zx = 1.5 * (x - w / 2) / (0.5 * zoom * w) + moveX;
+                zy = (y - h / 2) / (0.5 * zoom * h) + moveY;
+                float i = maxIter;
+                while (zx * zx + zy * zy < 4 && i > 0) 
+                {
+                    double tmp = zx * zx - zy * zy + cX;
+                    zy = 2.0 * zx * zy + cY;
+                    zx = tmp;
+                    i--;
+                }
+                
+                // set color based on number of itterations to leave fractal set
+                // HSB (hue, saturation, brightness) to RGB (red, green, blue)
+                // hue = fractional part of (300/i)
+                // saturation = 1
+                // brightness = 1 if i > 0
+                // brightness = 0 if i = 0 (didn't break out of itteration, (x,y) in the set)
+                int c = Color.HSBtoRGB((maxIter / i) % 1, 1, i > 0 ? 1 : 0);
+                image.setRGB(x, y, c);
+            }
+        }
+        g.drawImage(image, 0, 0, null);         // draw image at (0,0) (upper left)
+    }
+ 
+    @Override
+    public void paintComponent(Graphics gg)      // painting code
+    {
+        Scanner in = new Scanner(System.in);
+        super.paintComponent(gg);                // background
+        Graphics2D g = (Graphics2D) gg;
+        
+        // maximize distortion
+        //g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+        //        RenderingHints.VALUE_ANTIALIAS_ON);
+        
+        
+        double zoom = in.nextDouble();
+
+        drawJuliaSet(g, zoom);
+    }
+    
+    public static void main(String[] args) 
+    {
+            
+        // run on the event dispatch thread
+            //SwingUtilities.invokeLater(() -> 
+            //{
+                JFrame f = new JFrame();
+                f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                f.setTitle("Julia Set");
+                f.setResizable(false);
+                f.add(new Final(), BorderLayout.CENTER);
+                f.pack();
+                f.setLocationRelativeTo(null);          // middle of screen
+                f.setVisible(true);
+            //});
+        
+    }
+}
